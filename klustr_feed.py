@@ -1,6 +1,7 @@
 from db_credential import PostgreSQLCredential
 from klustr_dao import PostgreSQLKlustRDAO
 from klustr_utils import *
+from klustr_engine import *
 import numpy as np
 
 class KlustFeed():
@@ -23,5 +24,7 @@ class KlustFeed():
 
 if __name__ == "__main__":
     kf = KlustFeed("ABC")
-    print(kf.images_name)
+    # print(kf.images_name)
+    ke = KlustEngine(kf.decode()[0])
+    print(ke.centroid)
     
