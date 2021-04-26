@@ -1,5 +1,6 @@
 # Importation des modules
 import sys
+
 from db_credential import PostgreSQLCredential
 from klustr_dao import PostgreSQLKlustRDAO
 from klustr_widget import KlustRDataSourceViewWidget
