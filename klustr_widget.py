@@ -569,4 +569,4 @@ if __name__ == '__main__':
     source_data_widget = KlustRDataSourceViewWidget(klustr_dao)
     source_data_widget.show()
 
-    sys.exit(app.exec_())   
+    sys.exit(app.exec_())    
