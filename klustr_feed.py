@@ -2,14 +2,17 @@ from db_credential import PostgreSQLCredential
 from klustr_dao import PostgreSQLKlustRDAO
 from klustr_utils import *
 from klustr_engine import *
+from klustr_widget import *
 import numpy as np
 
 class KlustFeed():
     def __init__(self, dataset_name, training_image=True):
         credential = PostgreSQLCredential(host='jcd-prof-cvm-69b5.aivencloud.com', port=11702, database='data_kit', user='klustr_reader', password='h$2%1?')
         klustr_dao = PostgreSQLKlustRDAO(credential)
-        self.images_name = np.array(klustr_dao.image_from_dataset(dataset_name, training_image), dtype=object)[:,1]
+        self.dataset_images_name = np.array(klustr_dao.image_from_dataset(dataset_name, training_image), dtype=object)[:,1]
         self._raw_images = np.array(klustr_dao.image_from_dataset(dataset_name, training_image), dtype=object)[:, 6]
+        self.labels = np.array(klustr_dao.available_datasets, dtype=object)[:,1]
+
         
 #    def convert_to_qimage(self):
 #        return [qimage_argb32_from_png_decoding(img) for img in self._self._raw_images]
@@ -26,5 +29,13 @@ if __name__ == "__main__":
     kf = KlustFeed("ABC")
     # print(kf.images_name)
     ke = KlustEngine(kf.decode()[0])
-    print(ke.centroid)
-    
+    a = ke.centroid_radius()
+    b = ke.draw_circle_around_form()
+    c = ke.centroid
+    d = ke.nparray
+    e = np.equal(b, d)
+    f = ke.ext_form_area()
+    g = ke.knn_axe2()
+
+    print(kf.dataset_images_name)
+    z=1
