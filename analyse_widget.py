@@ -1,0 +1,321 @@
+# -------------------------------------------------------------
+# Auteur  : Henri-Paul Bolduc
+#           Ari
+#           Gael
+# Cours   : 420-C52-IN - AI 1
+# TP 1    : Analyse KNN des images
+# Fichier : main.py
+# -------------------------------------------------------------
+
+# Importation des modules
+# -------------------------------------------------------------
+import sys
+import numpy as np
+
+from klustr_utils import qimage_argb32_from_png_decoding
+from klustr_dao import *
+
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtCore import Qt
+from PySide6.QtCore import Slot
+
+from PySide6.QtWidgets import  (QWidget, QGroupBox, QLabel, QGridLayout, QHBoxLayout, 
+                                QVBoxLayout, QMessageBox, QPushButton, QComboBox, QSlider)
+from PySide6.QtGui import QPixmap
+
+from __feature__ import snake_case, true_property
+# -------------------------------------------------------------
+
+# View Widget
+# -------------------------------------------------------------
+class Projet1ViewWidget(QWidget):
+
+    def __init__(self, klustr_dao, parent=None):
+        
+        super().__init__(parent)
+        
+
+        self.klustr_dao = klustr_dao
+        if self.klustr_dao.is_available:
+            self._setup_models()
+            self._setup_gui()
+        else:
+            self._setup_invalid_gui()
+
+    def _setup_models(self):
+        # Data for Dataset Box
+        # --------------------
+        self.alldata = np.array(self.klustr_dao.available_datasets, dtype=object)
+        #print(self.alldata)
+        
+        self.dataset = np.array(self.klustr_dao.available_datasets, dtype=object)[:,1]
+        self.dataset = self.dataset + ' [' + np.array(self.klustr_dao.available_datasets, dtype=object)[:,5].astype(str) + ']'
+        self.dataset = self.dataset + ' [' + np.array(self.klustr_dao.available_datasets, dtype=object)[:,8].astype(str) + ']' 
+    
+    # Code Jean-Christophe si la data base n'est pas accessible
+    # ---------------------------------------------------------    
+    def _setup_invalid_gui(self):
+        not_available = QLabel('Data access unavailable')
+        not_available.alignment = Qt.AlignCenter
+        not_available.enabled = False
+        layout = QGridLayout(self)
+        layout.add_widget(not_available)
+        QMessageBox.warning(self, 'Data access unavailable', 'Data access unavailable.')
+    
+    # Setup interface graphique
+    # -------------------------    
+    def _setup_gui(self):
+        
+        # QLabel
+        # ------
+        qlab_catcount = QLabel("Category count:")
+        qlab_trainimgcount = QLabel("Training image count:")
+        qlab_testimgcount = QLabel("Test image count:")
+        qlab_totalimgcount = QLabel("Training image count:")
+        self.qlab_catcount_value = QLabel()        
+        self.qlab_trainimgcount_value = QLabel()
+        self.qlab_testimgcount_value = QLabel()
+        self.qlab_totalimgcount_value = QLabel()        
+        
+        qlab_translated = QLabel("Translated:")
+        qlab_rotated = QLabel("Rotated:")
+        qlab_scaled = QLabel("Scaled:")
+        self.qlab_translated_tf = QLabel()
+        self.qlab_rotated_tf = QLabel()
+        self.qlab_scaled_tf = QLabel()
+        
+        self.qlab_image = QLabel()        
+        self.qlab_classify = QLabel()        
+        
+        self.qlab_k = QLabel()
+        self.qlab_max = QLabel()
+        
+        # Bouton
+        # ------
+        buttonAbout = QPushButton('About')
+        buttonClassify = QPushButton('Classify')
+        
+        buttonAbout.clicked.connect(self._click_about)
+        buttonClassify.clicked.connect(self._click_classify)
+        
+        # Combo Box
+        # ---------
+        self.cbox_singletest = QComboBox()
+        self.cbox_singletest.currentIndexChanged.connect(self._cbox_singletest_index_change)
+        
+        self.cbox_dataset = QComboBox()
+        self.cbox_dataset.currentIndexChanged.connect(self._cbox_dataset_index_change)      
+        self.cbox_dataset.add_items(self.dataset)        
+        
+        # Group Box
+        # ---------
+        gbox_knn = QGroupBox('KNN Parameters')
+        gbox_singletest = QGroupBox('Single Test')
+        gbox_transformation = QGroupBox('Transformation')
+        gbox_includeddataset = QGroupBox('Included in dataset')
+        gbox_dataset = QGroupBox('Dataset')   
+        
+        # Slider
+        # ------
+        self.qslid_k = QSlider(Qt.Horizontal)
+        self.qslid_max = QSlider(Qt.Horizontal)
+        
+        self.qslid_k.valueChanged.connect(self._qslid_k_change)
+        self.qslid_max.valueChanged.connect(self._qslid_max_change)
+        
+        self.qslid_k.minimum = 10
+        self.qslid_k.maximum = 50
+        self.qslid_k.tick_interval = 5
+        
+        self.qslid_max.minimum = 1
+        self.qslid_max.maximum = 10
+        self.qslid_max.tick_interval = 1
+        
+        self.qslid_k.value = 30
+        self.qslid_max.value = 3        
+                
+        # HBox et VBox
+        # ------------
+        hbox_knnparam_max = QHBoxLayout()
+        hbox_knnparam_k = QHBoxLayout()
+        vbox_knnparam = QVBoxLayout(gbox_knn)
+        vbox_singletest = QVBoxLayout(gbox_singletest)
+        hbox_transformation_3 = QHBoxLayout()
+        hbox_transformation_2 = QHBoxLayout()
+        hbox_transformation_1 = QHBoxLayout()
+        hbox_includeddataset_4 = QHBoxLayout()        
+        hbox_includeddataset_3 = QHBoxLayout()
+        hbox_includeddataset_2 = QHBoxLayout()
+        hbox_includeddataset_1 = QHBoxLayout()
+        vbox_transformation = QVBoxLayout(gbox_transformation)
+        vbox_includeddataset = QVBoxLayout(gbox_includeddataset)
+        hbox_dataset = QHBoxLayout()
+        vbox_dataset = QVBoxLayout(gbox_dataset)
+        vbox_allinfo = QVBoxLayout()
+        vbox_KNNClassification = QVBoxLayout()
+        hbox_main = QHBoxLayout(self)
+        
+        # Add widget & layout
+        # -------------------
+        hbox_transformation_1.add_widget(qlab_translated)
+        hbox_transformation_1.add_widget(self.qlab_translated_tf)
+        hbox_transformation_2.add_widget(qlab_rotated)
+        hbox_transformation_2.add_widget(self.qlab_rotated_tf)
+        hbox_transformation_3.add_widget(qlab_scaled)
+        hbox_transformation_3.add_widget(self.qlab_scaled_tf)
+        
+        hbox_includeddataset_1.add_widget(qlab_catcount)
+        hbox_includeddataset_1.add_widget(self.qlab_catcount_value)
+        hbox_includeddataset_2.add_widget(qlab_trainimgcount)
+        hbox_includeddataset_2.add_widget(self.qlab_trainimgcount_value)
+        hbox_includeddataset_3.add_widget(qlab_testimgcount)
+        hbox_includeddataset_3.add_widget(self.qlab_testimgcount_value)
+        hbox_includeddataset_4.add_widget(qlab_totalimgcount)
+        hbox_includeddataset_4.add_widget(self.qlab_totalimgcount_value)
+        
+        vbox_transformation.add_layout(hbox_transformation_1)
+        vbox_transformation.add_layout(hbox_transformation_2)
+        vbox_transformation.add_layout(hbox_transformation_3)
+        
+        vbox_includeddataset.add_layout(hbox_includeddataset_1)
+        vbox_includeddataset.add_layout(hbox_includeddataset_2)
+        vbox_includeddataset.add_layout(hbox_includeddataset_3)
+        vbox_includeddataset.add_layout(hbox_includeddataset_4)
+        
+        hbox_dataset.add_widget(gbox_includeddataset)
+        hbox_dataset.add_widget(gbox_transformation)
+        
+        vbox_dataset.add_widget(self.cbox_dataset)
+        vbox_dataset.add_layout(hbox_dataset)
+        
+        vbox_singletest.add_widget(self.cbox_singletest)
+        vbox_singletest.add_widget(self.qlab_image)
+        vbox_singletest.add_widget(buttonClassify)
+        vbox_singletest.add_widget(self.qlab_classify)        
+        
+        hbox_knnparam_k.add_widget(self.qlab_k)
+        hbox_knnparam_k.add_widget(self.qslid_k)
+        
+        hbox_knnparam_max.add_widget(self.qlab_max)
+        hbox_knnparam_max.add_widget(self.qslid_max)
+                
+        vbox_knnparam.add_layout(hbox_knnparam_k)
+        vbox_knnparam.add_layout(hbox_knnparam_max)        
+        
+        vbox_allinfo.add_widget(gbox_dataset)
+        vbox_allinfo.add_widget(gbox_singletest)
+        vbox_allinfo.add_widget(gbox_knn)
+        vbox_allinfo.add_widget(buttonAbout)
+        
+        hbox_main.add_layout(vbox_allinfo)
+        hbox_main.add_layout(vbox_KNNClassification)    
+
+        # Mise en forme
+        # ---------------
+        qlab_catcount.alignment = Qt.AlignLeft  
+        qlab_trainimgcount.alignment = Qt.AlignLeft
+        qlab_testimgcount.alignment = Qt.AlignLeft
+        qlab_totalimgcount.alignment = Qt.AlignLeft
+        self.qlab_catcount_value.alignment = Qt.AlignRight        
+        self.qlab_trainimgcount_value.alignment = Qt.AlignRight  
+        self.qlab_testimgcount_value.alignment = Qt.AlignRight  
+        self.qlab_totalimgcount_value.alignment = Qt.AlignRight        
+        
+        qlab_translated.alignment = Qt.AlignLeft
+        qlab_rotated.alignment = Qt.AlignLeft
+        qlab_scaled.alignment = Qt.AlignLeft
+        self.qlab_translated_tf.alignment = Qt.AlignRight  
+        self.qlab_rotated_tf.alignment = Qt.AlignRight  
+        self.qlab_scaled_tf.alignment = Qt.AlignRight
+        
+        self.qlab_image.style_sheet = 'QLabel { background-color : #313D4A; padding : 10px 10px 10px 10px; }'
+        self.qlab_image.alignment = Qt.AlignCenter
+        
+        self.qlab_classify.alignment = Qt.AlignCenter
+        
+        self.qlab_k.alignment = Qt.AlignCenter
+        self.qlab_max.alignment = Qt.AlignCenter
+        
+        qlab_catcount.set_fixed_size(120, 20)
+        qlab_trainimgcount.set_fixed_size(120, 20)
+        qlab_testimgcount.set_fixed_size(120, 20)
+        qlab_totalimgcount.set_fixed_size(120, 20)
+        self.qlab_catcount_value.set_fixed_size(50, 20)        
+        self.qlab_trainimgcount_value.set_fixed_size(50, 20)
+        self.qlab_testimgcount_value.set_fixed_size(50, 20)
+        self.qlab_totalimgcount_value.set_fixed_size(50, 20)       
+        
+        qlab_translated.set_fixed_size(120, 20)
+        qlab_rotated.set_fixed_size(120, 20)
+        qlab_scaled.set_fixed_size(120, 20)
+        self.qlab_translated_tf.set_fixed_size(50, 20)
+        self.qlab_rotated_tf.set_fixed_size(50, 20)
+        self.qlab_scaled_tf.set_fixed_size(50, 20)
+        
+        self.qlab_k.set_fixed_size(100, 10)
+        self.qlab_max.set_fixed_size(100, 10)
+        
+    @Slot()
+    def _cbox_dataset_index_change(self):
+        # Update data of dataset box
+        # --------------------------
+        cbox_dataset_index = self.cbox_dataset.current_index
+        cbox_dataset_title = self.alldata[cbox_dataset_index, 1]
+        
+        if (self.alldata[cbox_dataset_index,2]):
+            self.qlab_translated_tf.text = "True"
+        else :
+            self.qlab_translated_tf.text = "False"
+            
+        if (self.alldata[cbox_dataset_index,3]):
+            self.qlab_rotated_tf.text = "True"
+        else :
+            self.qlab_rotated_tf.text = "False"
+            
+        if (self.alldata[cbox_dataset_index,4]):
+            self.qlab_scaled_tf.text = "True"
+        else :
+            self.qlab_scaled_tf.text = "False"
+            
+        self.qlab_catcount_value.text = str(self.alldata[cbox_dataset_index,5])
+        self.qlab_trainimgcount_value.text = str(self.alldata[cbox_dataset_index,6])
+        self.qlab_testimgcount_value.text = str(self.alldata[cbox_dataset_index,7])
+        self.qlab_totalimgcount_value.text = str(self.alldata[cbox_dataset_index,8])
+        
+        # Update data of single test QComboBox
+        # ------------------------------------
+        self.dataset_image = np.array(self.klustr_dao.image_from_dataset(cbox_dataset_title, False), dtype=object)
+        self.cbox_singletest.clear()
+        self.cbox_singletest.add_items(self.dataset_image[:,3])
+
+    
+    @Slot()
+    def _cbox_singletest_index_change(self):
+        cbox_singletest_index = self.cbox_singletest.current_index
+        self.singletest_image = qimage_argb32_from_png_decoding(self.dataset_image[cbox_singletest_index,6])
+        self.qlab_image.pixmap = QPixmap.from_image(self.singletest_image)
+        self.qlab_classify.text = "Not classified"
+        
+    @Slot()
+    def _click_classify(self):
+        self.qlab_classify.text = "Classified"
+        
+    @Slot()
+    def _click_about(self):
+        qmsgbox = QMessageBox()
+        qmsgbox.set_window_title("Projet 1 - C52 - About")
+        qmsgbox.text =  "{:<100}".format("Blabla1") + "\n" + \
+                        "{:<100}".format("Blabla2") + "\n" + \
+                        "{:<100}".format("Blabla3")
+        qmsgbox.exec()
+        
+    @Slot()
+    def _qslid_k_change(self):
+        self.k_value = self.qslid_k.value/10
+        self.qlab_k.text = "K = " + str(self.k_value)
+        
+    @Slot()
+    def _qslid_max_change(self):
+        self.max_value = self.qslid_max.value/10
+        self.qlab_max.text = "Max = " + str(self.max_value)
+# -------------------------------------------------------------
