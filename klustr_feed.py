@@ -22,11 +22,14 @@ class KlustFeed():
 
     def decode(self):
         return np.where(np.logical_not([ndarray_from_qimage_argb32(qimage_argb32_from_png_decoding(img)) for img in self._raw_images]), 1, 0) 
-#        f=np.vectorize(qimage_argb32_from_png_decoding)
-#        self._self._raw_images = f(self._self._raw_images)
+        f=np.vectorize(qimage_argb32_from_png_decoding)
+        self._raw_images = f(self._raw_images)
 
 if __name__ == "__main__":
     kf = KlustFeed("ABC")
+    # self.dataset_image = np.array(self.klustr_dao.image_from_dataset(cbox_dataset_title, False), dtype=object)
+    # self.dataset_image = np.array(self.klustr_dao.image_from_dataset('ABC', True), dtype=object)
+
     # print(kf.images_name)
     ke = KlustEngine(kf.decode()[0])
     a = ke.centroid_radius()
