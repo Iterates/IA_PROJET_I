@@ -1,4 +1,5 @@
 import numpy as np
+import time
 from klustr_feed import *
 
 #Metriques
@@ -24,29 +25,9 @@ class KlustEngine():
         # self.centroid = self.centroid_function(self.comp_array)
         self.circle_around_form = self.draw_circle_around_form()
 
-if __name__ == "__main__":
-    #TODO Inverser colonnes et rangees 
-     
-    data = np.array([10, 3, 4, 5, 6])
-    #Extraire
-    impair = data%2
-    res = data[impair == 1]
-    #Meshgrid
-
-
     def area_function(self, array):
         return np.count_nonzero(array)
 
-    def create_image(size):
-        return np.zeros(size, dtype=np.uint8)
-
-    def draw_circle_the_numpy_way(image, center, radius): # the matrix way!
-        col_mesh, row_mesh = np.meshgrid(np.arange(image.shape[1]), np.arange(image.shape[0]))
-        image[:] = np.logical_or(image[:], (np.sqrt((row_mesh - center[0])**2 + (col_mesh - center[1])**2) <= radius).astype(np.uint8))
-
-    img = create_image((15, 15))
-
-    draw_circle_the_numpy_way(img, (6, 6), 4)
     #On recherche la somme de tous les points non-nuls divise par le nombre de points
     def centroid_function(self, array):
         coordx, coordy = np.meshgrid(np.arange(len(array[0,:])), np.arange(len(array[:,0])))
@@ -86,8 +67,6 @@ if __name__ == '__main__':
     ke = KlustEngine(array)
     print(ke.centroid)
 
-    print(img)
-
     def perimeter_function(image):
         m_left = image[1:-1, 0:-2]
         m_center = image[1:-1, 1:-1]
@@ -109,10 +88,67 @@ if __name__ == '__main__':
         coord[:, 1] = m_coord_y
         return coord
 
-    
+    def create_image(size):
+        return np.zeros(size, dtype=np.uint8)
+
+    def draw_circle_the_numpy_way(image, center, radius): # the matrix way!
+        col_mesh, row_mesh = np.meshgrid(np.arange(image.shape[1]), np.arange(image.shape[0]))
+        image[:] = np.logical_or(image[:], (np.sqrt((row_mesh - center[0])**2 + (col_mesh - center[1])**2) <= radius).astype(np.uint8))
+
+    def dist_moyenne_centre(image):
+        m_coord_x, m_coord_y = np.meshgrid(np.arange(image.shape[1]), np.arange(image.shape[0])) 
+        centroid_x, centroid_y = centroid_function(image)[1], centroid_function(image)[0]
+        return np.mean(np.sqrt((m_coord_x - centroid_x)**2 + (m_coord_y - centroid_y)**2))
+
+    def centroid_function(array):
+        coordx, coordy = np.meshgrid(np.arange(len(array[0,:])), np.arange(len(array[:,0])))
+        x = np.sum(coordx * array)
+        y = np.sum(coordy * array)
+        ele = np.count_nonzero(array == 1)
+        return y/ele, x/ele
+
+    img = create_image((15, 15))
+
+    draw_circle_the_numpy_way(img, (6, 6), 4)
+
+    print(img)
+
     new_img = perimeter_function(img)
     x = extraire_coord(new_img)
     print(new_img * 1)
     print(np.sum(img))
     print(np.sum(new_img))
-    print(0)
+    x = dist_moyenne_centre(new_img)
+    array_of_arrays = np.array([np.arange(16).reshape(4,4), np.arange(16).reshape(4,4), np.arange(16).reshape(4,4)])
+    s = lambda arr : np.sum(arr)
+    vect_s = np.vectorize(s, signature="(m,n)->()")
+    sum_array = vect_s(array_of_arrays)
+    print(array_of_arrays)
+    print(sum_array)
+
+    def d_print(function):
+        def wrapper(*args, **kwargs):
+            function(*args, **kwargs)
+            function(*args, **kwargs)
+        return wrapper
+
+
+    def f_chrono(function):
+        def wrapper(*args, **kwargs):
+            start = time.time_ns()
+            function(*args, **kwargs)
+            end = time.time_ns()
+            return print(end - start)
+        return wrapper
+
+    @f_chrono 
+    @d_print
+    def fonction(hh):
+        print(hh)
+
+    @f_chrono
+    def sum_of_array(array):
+        return np.sum(array)
+
+    fonction("pp")
+    sum_of_array(new_img)
