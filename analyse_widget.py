@@ -16,6 +16,8 @@ import matplotlib.pyplot as plt
 from klustr_utils import qimage_argb32_from_png_decoding
 from klustr_dao import *
 
+#from klustr_engine import *
+
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
@@ -296,12 +298,7 @@ class Projet1ViewWidget(QWidget):
         data2 = generate_data(50, [-10., 25., -10], [10., 15, 20.])
     
         self.axis.scatter(data1[:,0], data1[:,1], data1[:,2], color=[1,0,0], marker='o')
-        self.axis.scatter(data2[:,0], data2[:,1], data2[:,2], color=[0,0,1], marker='x')
-        
-        
-        
-        
-        
+        self.axis.scatter(data2[:,0], data2[:,1], data2[:,2], color=[0,0,1], marker='x')  
         
     @Slot()
     def _cbox_dataset_index_change(self):
@@ -335,6 +332,11 @@ class Projet1ViewWidget(QWidget):
         self.dataset_image = np.array(self.klustr_dao.image_from_dataset(cbox_dataset_title, False), dtype=object)
         self.cbox_singletest.clear()
         self.cbox_singletest.add_items(self.dataset_image[:,3])
+        
+        # Analyse du data
+        # ---------------
+        print(self.dataset_image)
+        
 
     
     @Slot()
