@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 from klustr_utils import qimage_argb32_from_png_decoding
 from klustr_dao import *
 
-#from klustr_engine import *
+from klustr_engine import *
 
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -74,29 +74,10 @@ class Projet1ViewWidget(QWidget):
     def _setup_gui(self):
         
         # MatPlotLib
-        qlab_matgraph = QLabel()
+        self.qlab_matgraph = QLabel()     
         
-        my_dpi = 100
-        width, height = 250, 250
-        figure = plt.figure(figsize=(width / my_dpi, height / my_dpi), dpi=my_dpi)
-        figure.set_size_inches(width / my_dpi, height / my_dpi)  
-        canvas = FigureCanvas(figure)         
-        
-        self.axis = figure.add_subplot(projection='3d')
-        
-        self.axis.set_title('KNN Classification')
-        self.axis.set_xlabel('x')
-        self.axis.set_ylabel('y')
-        self.axis.set_zlabel('z')
-        self.axis.set_xlim3d(0, 1)
-        self.axis.set_ylim3d(0, 1)
-        self.axis.set_zlim3d(0, 1)
-        
-        canvas.draw()
-        w, h = canvas.get_width_height()
-        buffer = canvas.buffer_rgba() 
-        image = QtGui.QImage(buffer, w, h, w * 4, QtGui.QImage.Format_ARGB32)
-        qlab_matgraph.pixmap = QtGui.QPixmap.from_image(image)
+        self.mathgraph_init()           
+        self.mathgraph()
         
         # QLabel
         # ------
@@ -239,7 +220,7 @@ class Projet1ViewWidget(QWidget):
         vbox_allinfo.add_widget(gbox_knn)
         vbox_allinfo.add_widget(buttonAbout)
         
-        vbox_KNNClassification.add_widget(qlab_matgraph)
+        vbox_KNNClassification.add_widget(self.qlab_matgraph)
         
         hbox_main.add_layout(vbox_allinfo)
         hbox_main.add_layout(vbox_KNNClassification)    
@@ -289,17 +270,31 @@ class Projet1ViewWidget(QWidget):
         self.qlab_k.set_fixed_size(100, 10)
         self.qlab_max.set_fixed_size(100, 10)
         
-    def generate_data(size, mean, sigma):
-        rng = np.random.default_rng()
-        return rng.normal(np.tile(mean, (size, 1)), np.tile(sigma, (size, 1)))    
-    
-    def _graph_matplotlib(self):
-        data1 = generate_data(100, [10., -5., 2.5], [20., 10, 30.])
-        data2 = generate_data(50, [-10., 25., -10], [10., 15, 20.])
-    
-        self.axis.scatter(data1[:,0], data1[:,1], data1[:,2], color=[1,0,0], marker='o')
-        self.axis.scatter(data2[:,0], data2[:,1], data2[:,2], color=[0,0,1], marker='x')  
+    def mathgraph_init(self):
+        my_dpi = 100
+        width, height = 570, 570
+        figure = plt.figure(figsize=(width / my_dpi, height / my_dpi), dpi=my_dpi)
+        figure.set_size_inches(width / my_dpi, height / my_dpi)  
+        self.canvas = FigureCanvas(figure)         
         
+        self.axis = figure.add_subplot(projection='3d')        
+        self.axis.set_title('KNN Classification')
+        self.axis.set_xlabel('x')
+        self.axis.set_ylabel('y')
+        self.axis.set_zlabel('z')
+        self.axis.set_xlim3d(0, 2)
+        self.axis.set_ylim3d(0, 2)
+        self.axis.set_zlim3d(0, 2)    
+    
+    def mathgraph(self):
+                
+        self.canvas.draw()
+        w, h = self.canvas.get_width_height()
+        buffer = self.canvas.buffer_rgba() 
+        image = QtGui.QImage(buffer, w, h, w * 4, QtGui.QImage.Format_ARGB32)
+        self.qlab_matgraph.pixmap = QtGui.QPixmap.from_image(image)
+    
+    
     @Slot()
     def _cbox_dataset_index_change(self):
         # Update data of dataset box
@@ -333,11 +328,42 @@ class Projet1ViewWidget(QWidget):
         self.cbox_singletest.clear()
         self.cbox_singletest.add_items(self.dataset_image[:,3])
         
-        # Analyse du data
-        # ---------------
-        print(self.dataset_image)
+        # Analyse du data  
+        # ---------------------------------
         
+        # Aller chercher le dataset_test
+        dataset_test = np.array(self.klustr_dao.image_from_dataset(cbox_dataset_title, False), dtype=object)
+        
+        # Return all Labels in dataset_test and assign a color and symbol        
+        self.dataset_label, frequency = np.unique(self.dataset_image[:,1], return_counts = True)
+        qte_label = np.count_nonzero(self.dataset_label)
+        
+        couleur = np.random.rand(qte_label, 3)
+        
+        marqueur = []        
+        for i in self.dataset_label:            
+            random_temp = np.random.rand()
+            if random_temp < 0.33: 
+                marqueur.append('+')
+            elif random_temp < 0.66: 
+                marqueur.append('x')
+            else: 
+                marqueur.append('o')
+        
+        # Retourner les valeurs KNN de la liste d'image
+        self.knn_values_x, self.knn_values_y, self.knn_values_z = KlustEngine(dataset_test[:,6]).extraire_coord()
+        
+        # Afficher les points ds le graphique
+        self.mathgraph_init()
+        
+        compteur_frequency = 0
+        compteur_i = 0
+        for i in frequency: 
+            self.axis.scatter(self.knn_values_x[compteur_frequency:compteur_frequency+i], self.knn_values_y[compteur_frequency:compteur_frequency+i], self.knn_values_z[compteur_frequency:compteur_frequency+i], color=couleur[compteur_i], marker=marqueur[compteur_i])
+            compteur_frequency += i
+            compteur_i += 1
 
+        self.mathgraph()
     
     @Slot()
     def _cbox_singletest_index_change(self):
