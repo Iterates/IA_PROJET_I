@@ -71,16 +71,12 @@ class Projet1ViewWidget(QWidget):
     
     # Setup interface graphique
     # -------------------------    
-    def _setup_gui(self):
-        
-        # MatPlotLib
-        self.qlab_matgraph = QLabel()     
-        
-        self.mathgraph_init()           
-        self.mathgraph()
+    def _setup_gui(self):       
         
         # QLabel
         # ------
+        self.qlab_matgraph = QLabel()   
+        
         qlab_catcount = QLabel("Category count:")
         qlab_trainimgcount = QLabel("Training image count:")
         qlab_testimgcount = QLabel("Test image count:")
@@ -282,9 +278,9 @@ class Projet1ViewWidget(QWidget):
         self.axis.set_xlabel('x')
         self.axis.set_ylabel('y')
         self.axis.set_zlabel('z')
-        self.axis.set_xlim3d(0, 2)
-        self.axis.set_ylim3d(0, 2)
-        self.axis.set_zlim3d(0, 2)    
+        self.axis.set_xlim3d(0, 1)
+        self.axis.set_ylim3d(0, 1)
+        self.axis.set_zlim3d(0, 1)    
     
     def mathgraph(self):
                 
@@ -352,6 +348,10 @@ class Projet1ViewWidget(QWidget):
         
         # Retourner les valeurs KNN de la liste d'image
         self.knn_values_x, self.knn_values_y, self.knn_values_z = KlustEngine(dataset_test[:,6]).extraire_coord()
+        print (self.knn_values_x)
+        print (self.knn_values_y)
+        print (self.knn_values_z)
+        print (frequency)
         
         # Afficher les points ds le graphique
         self.mathgraph_init()
