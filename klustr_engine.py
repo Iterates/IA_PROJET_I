@@ -15,7 +15,7 @@ from klustr_dao import PostgreSQLKlustRDAO
 #Dimensions nombre d'images
 
 class KlustEngine():
-    def __init__(self, nparrays):
+    def __init__(self, nparrays, label_images):
         # self.nparray = nparray
         # self.comp_array = np.zeros(220*220).reshape((220, 220))
         # self.comp_array[34:-36, 34:-36] = self.nparray
@@ -51,8 +51,9 @@ class KlustEngine():
             
             x.append(self.knn_axe1(aire, perimetre))
             y.append(self.knn_axe2(aire, aire_cerlce))
-            z.append(self.knn_axe3(self.perimeter_image(i) * 1, centroid))
+            z.append(self.knn_axe3(i, centroid))
             # print(self.dist_moyenne_centre(i))
+            # print(self.dist_moy_centre(self.perimeter_image(i) * 1, centroid))
         print(x, y, z)
         return x, y, z
 
@@ -91,10 +92,16 @@ class KlustEngine():
         col_mesh, row_mesh = np.meshgrid(np.arange(perimeter.shape[1]), np.arange(perimeter.shape[0]))
         return np.min(np.where(perimeter, np.sqrt(pow((row_mesh - centroid[0]), 2) + pow((col_mesh - centroid[1]), 2)), np.zeros(perimeter.shape)))
 
-    def dist_moyenne_centre(self, perimeter, centroid):
-        m_coord_x, m_coord_y = np.meshgrid(np.arange(perimeter.shape[1]), np.arange(perimeter.shape[0])) 
-        # centroid_x, centroid_y = self.centroid_function(image)[0], self.centroid_function(image)[1]
-        return np.mean(np.sqrt((m_coord_x - centroid[0])**2 + (m_coord_y - centroid[1])**2))
+    # def dist_moyenne_centre(self, perimeter, centroid):
+    #     m_coord_x, m_coord_y = np.meshgrid(np.arange(perimeter.shape[1]), np.arange(perimeter.shape[0])) 
+    #     # centroid_x, centroid_y = self.centroid_function(image)[0], self.centroid_function(image)[1]
+    #     return np.mean(np.sqrt((m_coord_x - centroid[0])**2 + (m_coord_y - centroid[1])**2))
+
+    def dist_moy_centre(self, image_perimetre, centroid):
+        col_mesh, row_mesh = np.meshgrid(np.arange(image_perimetre.shape[1]), np.arange(image_perimetre.shape[0]))
+        dist = np.sqrt(pow((row_mesh - centroid[0]), 2) + pow((col_mesh - centroid[1]), 2))
+        a = dist[image_perimetre == 1]
+        return (np.min(a), np.mean(a), np.max(a))
 
     # calcul du périmètre
     def perimeter_image(self, image):
@@ -119,14 +126,16 @@ class KlustEngine():
 
     def knn_axe3(self, image, centroid):
         # return np.count_nonzero(np.logical_and(image[1:-1, 1:-1], self.perimeter_image(self.draw_circle_around_form(image, centroid, radius))) * 1) / perimeter
-        return self.dist_moyenne_centre(image) / self.centroid_radius(image, centroid)
+        distance = self.dist_moy_centre(self.perimeter_image(image) * 1, centroid)# / self.centroid_radius(image, centroid)
+        return distance[1] / distance[2]
 
 
 if __name__ == '__main__':
     # array = np.array([220,220], dtype = np.uint8)
     credential = PostgreSQLCredential(host='jcd-prof-cvm-69b5.aivencloud.com', port=11702, database='data_kit', user='klustr_reader', password='h$2%1?')
     klustr_dao = PostgreSQLKlustRDAO(credential)
+    label_images = np.array(klustr_dao.image_from_dataset('ABC', True), dtype=object)[:,1]
     raw_images = np.array(klustr_dao.image_from_dataset('ABC', True), dtype=object)[:, 6]
-    ke = KlustEngine(raw_images)
+    ke = KlustEngine(raw_images, label_images)
     # print(klustr_dao.image_from_dataset('ABC', True))
 
