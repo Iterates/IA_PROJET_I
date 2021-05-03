@@ -36,6 +36,7 @@ if __name__ == "__main__":
     e = np.equal(b, d)
     f = ke.ext_form_area()
     g = ke.knn_axe2()
+    h = ke.perimetre
 
     print(kf.dataset_images_name)
     z=1

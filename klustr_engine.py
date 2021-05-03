@@ -23,6 +23,8 @@ class KlustEngine():
         self.radius = self.centroid_radius()
         # self.centroid = self.centroid_function(self.comp_array)
         self.circle_around_form = self.draw_circle_around_form()
+        self.area_circle_around_form = np.count_nonzero(self.circle_around_form)
+        self.perimetre = np.count_nonzero(self.perimeter_image(nparray) * 1)
 
 
 
@@ -36,11 +38,16 @@ class KlustEngine():
         y = np.sum(coordy * array)
         ele = np.count_nonzero(array == 1)
         return y/ele, x/ele
+    
 
     #dessine un cerle autour de l'image
     def draw_circle_around_form(self):
         col_mesh, row_mesh = np.meshgrid(np.arange(self.nparray.shape[1]), np.arange(self.nparray.shape[0]))
         return np.where(np.sqrt((row_mesh - self.centroid[0])**2 + (col_mesh - self.centroid[1])**2) <= self.radius, np.ones(self.nparray.shape), np.zeros(self.nparray.shape))
+
+    # def calculate_area_circle_around_form(self):
+
+    
 
     def ext_form_area(self):
         return np.count_nonzero(self.circle_around_form) - self.form_area
@@ -51,12 +58,25 @@ class KlustEngine():
         # return np.max(np.where(self.nparray, np.sqrt(pow((col_mesh - self.centroid[0]), 2) + pow((row_mesh - self.centroid[1]), 2)), np.zeros(self.nparray.shape)))
         return np.where(self.nparray, np.sqrt(pow((row_mesh - self.centroid[0]), 2) + pow((col_mesh - self.centroid[1]), 2)), np.zeros(self.nparray.shape))
 
+    # calcul du périmètre
+    def perimeter_image(self, image):
+        m_left = image[1:-1, 0:-2]
+        m_center = image[1:-1, 1:-1]
+        m_top = image[0:-2, 1:-1]
+        m_right = image[1:-1, 2:]
+        m_bottom = image[2:, 1:-1]
+        temp_bottom = np.logical_and(m_center, np.logical_xor(m_bottom, m_center, dtype=np.int32))
+        temp_right = np.logical_and(m_center, np.logical_xor(m_right, m_center, dtype=np.int32))
+        temp_top = np.logical_and(m_center, np.logical_xor(m_top, m_center, dtype=np.int32))
+        temp_left = np.logical_and(m_center, np.logical_xor(m_left, m_center, dtype=np.int32))
+        return np.logical_or(temp_right, np.logical_or(temp_bottom, np.logical_or(temp_top, temp_left, dtype=np.int32)))
+
+
     def knn_axe1(self):
-        # return aire/perimetre**2
-        pass
+        return self.form_area / self.perimetre**2
 
     def knn_axe2(self):
-        return self.ext_form_area() / self.form_area
+        return self.form_area / self.area_circle_around_form
 
     def knn_axe3(self):
         # return
