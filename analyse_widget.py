@@ -1,19 +1,23 @@
 # -------------------------------------------------------------
 # Auteur  : Henri-Paul Bolduc
-#           Ari
-#           Gael
+#           Ari Hotz-Garber
+#           Gael Lane Lepine
 # Cours   : 420-C52-IN - AI 1
 # TP 1    : Analyse KNN des images
-# Fichier : main.py
+# Fichier : analyse_widget.py
 # -------------------------------------------------------------
 
 # Importation des modules
 # -------------------------------------------------------------
 import sys
 import numpy as np
+import matplotlib.pyplot as plt
 
 from klustr_utils import qimage_argb32_from_png_decoding
 from klustr_dao import *
+
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt
@@ -32,10 +36,10 @@ class Projet1ViewWidget(QWidget):
 
     def __init__(self, klustr_dao, parent=None):
         
-        super().__init__(parent)
-        
+        super().__init__(parent)        
 
         self.klustr_dao = klustr_dao
+        
         if self.klustr_dao.is_available:
             self._setup_models()
             self._setup_gui()
@@ -51,6 +55,7 @@ class Projet1ViewWidget(QWidget):
         self.dataset = np.array(self.klustr_dao.available_datasets, dtype=object)[:,1]
         self.dataset = self.dataset + ' [' + np.array(self.klustr_dao.available_datasets, dtype=object)[:,5].astype(str) + ']'
         self.dataset = self.dataset + ' [' + np.array(self.klustr_dao.available_datasets, dtype=object)[:,8].astype(str) + ']' 
+        #print(self.dataset)
     
     # Code Jean-Christophe si la data base n'est pas accessible
     # ---------------------------------------------------------    
@@ -65,6 +70,31 @@ class Projet1ViewWidget(QWidget):
     # Setup interface graphique
     # -------------------------    
     def _setup_gui(self):
+        
+        # MatPlotLib
+        qlab_matgraph = QLabel()
+        
+        my_dpi = 100
+        width, height = 250, 250
+        figure = plt.figure(figsize=(width / my_dpi, height / my_dpi), dpi=my_dpi)
+        figure.set_size_inches(width / my_dpi, height / my_dpi)  
+        canvas = FigureCanvas(figure)         
+        
+        self.axis = figure.add_subplot(projection='3d')
+        
+        self.axis.set_title('KNN Classification')
+        self.axis.set_xlabel('x')
+        self.axis.set_ylabel('y')
+        self.axis.set_zlabel('z')
+        self.axis.set_xlim3d(0, 1)
+        self.axis.set_ylim3d(0, 1)
+        self.axis.set_zlim3d(0, 1)
+        
+        canvas.draw()
+        w, h = canvas.get_width_height()
+        buffer = canvas.buffer_rgba() 
+        image = QtGui.QImage(buffer, w, h, w * 4, QtGui.QImage.Format_ARGB32)
+        qlab_matgraph.pixmap = QtGui.QPixmap.from_image(image)
         
         # QLabel
         # ------
@@ -104,8 +134,8 @@ class Projet1ViewWidget(QWidget):
         self.cbox_singletest.currentIndexChanged.connect(self._cbox_singletest_index_change)
         
         self.cbox_dataset = QComboBox()
-        self.cbox_dataset.currentIndexChanged.connect(self._cbox_dataset_index_change)      
-        self.cbox_dataset.add_items(self.dataset)        
+        self.cbox_dataset.currentIndexChanged.connect(self._cbox_dataset_index_change)  
+        self.cbox_dataset.add_items(self.dataset)    
         
         # Group Box
         # ---------
@@ -207,6 +237,8 @@ class Projet1ViewWidget(QWidget):
         vbox_allinfo.add_widget(gbox_knn)
         vbox_allinfo.add_widget(buttonAbout)
         
+        vbox_KNNClassification.add_widget(qlab_matgraph)
+        
         hbox_main.add_layout(vbox_allinfo)
         hbox_main.add_layout(vbox_KNNClassification)    
 
@@ -254,6 +286,22 @@ class Projet1ViewWidget(QWidget):
         
         self.qlab_k.set_fixed_size(100, 10)
         self.qlab_max.set_fixed_size(100, 10)
+        
+    def generate_data(size, mean, sigma):
+        rng = np.random.default_rng()
+        return rng.normal(np.tile(mean, (size, 1)), np.tile(sigma, (size, 1)))    
+    
+    def _graph_matplotlib(self):
+        data1 = generate_data(100, [10., -5., 2.5], [20., 10, 30.])
+        data2 = generate_data(50, [-10., 25., -10], [10., 15, 20.])
+    
+        self.axis.scatter(data1[:,0], data1[:,1], data1[:,2], color=[1,0,0], marker='o')
+        self.axis.scatter(data2[:,0], data2[:,1], data2[:,2], color=[0,0,1], marker='x')
+        
+        
+        
+        
+        
         
     @Slot()
     def _cbox_dataset_index_change(self):
