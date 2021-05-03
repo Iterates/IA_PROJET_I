@@ -1,7 +1,7 @@
 # -------------------------------------------------------------
 # Auteur  : Henri-Paul Bolduc
-#           Ari
-#           Gael
+#           Ariel Hotz-Garber
+#           Gael Lane Lépine
 # Cours   : 420-C52-IN - AI 1
 # TP 1    : Analyse KNN des images
 # Fichier : main.py
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     credential = PostgreSQLCredential(host='jcd-prof-cvm-69b5.aivencloud.com', port=11702, database='data_kit', user='klustr_reader', password='h$2%1?')
     #credential = 1
     klustr_dao = PostgreSQLKlustRDAO(credential)
-    #source_data_widget = KlustRDataSourceViewWidget(klustr_dao)
+    # source_data_widget = KlustRDataSourceViewWidget(klustr_dao)
     source_data_widget = Projet1ViewWidget(klustr_dao)
     
     source_data_widget.show()
