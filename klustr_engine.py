@@ -9,7 +9,7 @@
 
 # Importation des modules
 # -------------------------------------------------------------
-import numpy as np
+import numpy as np 
 from klustr_utils import *
 from db_credential import PostgreSQLCredential
 from klustr_dao import PostgreSQLKlustRDAO
@@ -36,7 +36,7 @@ class KlustEngine():
             
             x.append(self.knn_axe1(aire, perimetre))
             y.append(self.knn_axe2(aire, aire_cerlce))
-            z.append(self.knn_axe3(self.perimeter_image(i) * 1, centroid))
+            z.append(self.knn_axe3(i, centroid))
 
         return x, y, z
 
@@ -56,7 +56,7 @@ class KlustEngine():
         col_mesh, row_mesh = np.meshgrid(np.arange(image.shape[1]), np.arange(image.shape[0]))
         return np.where(np.sqrt((row_mesh - centroid[0])**2 + (col_mesh - centroid[1])**2) <= radius, np.ones(image.shape), np.zeros(image.shape))
 
-    #calcul la plus grande distance Ã  partir du centroid
+    #calcul la plus grande distance à partir du centroid
     def centroid_radius(self, image, centroid):
         col_mesh, row_mesh = np.meshgrid(np.arange(image.shape[1]), np.arange(image.shape[0]))
         return np.max(np.where(image, np.sqrt(pow((row_mesh - centroid[0]), 2) + pow((col_mesh - centroid[1]), 2)), np.zeros(image.shape)))
@@ -65,11 +65,13 @@ class KlustEngine():
         col_mesh, row_mesh = np.meshgrid(np.arange(perimeter.shape[1]), np.arange(perimeter.shape[0]))
         return np.min(np.where(perimeter, np.sqrt(pow((row_mesh - centroid[0]), 2) + pow((col_mesh - centroid[1]), 2)), np.zeros(perimeter.shape)))
 
-    def dist_moyenne_centre(self, perimeter, centroid):
-        m_coord_x, m_coord_y = np.meshgrid(np.arange(perimeter.shape[1]), np.arange(perimeter.shape[0])) 
-        return np.mean(np.sqrt((m_coord_x - centroid[0])**2 + (m_coord_y - centroid[1])**2))
+    def dist_moy_centre(self, image_perimetre, centroid):
+        col_mesh, row_mesh = np.meshgrid(np.arange(image_perimetre.shape[1]), np.arange(image_perimetre.shape[0]))
+        dist = np.sqrt(pow((row_mesh - centroid[0]), 2) + pow((col_mesh - centroid[1]), 2))
+        a = dist[image_perimetre == 1]
+        return (np.min(a), np.mean(a), np.max(a))
 
-    # calcul du perimetre
+    # calcul du périmètre
     def perimeter_image(self, image):
         m_left = image[1:-1, 0:-2]
         m_center = image[1:-1, 1:-1]
@@ -82,7 +84,6 @@ class KlustEngine():
         temp_left = np.logical_and(m_center, np.logical_xor(m_left, m_center))
         return np.logical_or(temp_right, np.logical_or(temp_bottom, np.logical_or(temp_top, temp_left)))
 
-
     def knn_axe1(self, area, perimeter):
         return (4 * np.pi * area) / perimeter**2
 
@@ -90,6 +91,5 @@ class KlustEngine():
         return area / area_circle
 
     def knn_axe3(self, image, centroid):
-        return self.dist_moyenne_centre(image, centroid) / self.centroid_radius(image, centroid)
-# -------------------------------------------------------------
-
+        distance = self.dist_moy_centre(self.perimeter_image(image) * 1, centroid)
+        return distance[1] / distance[2]

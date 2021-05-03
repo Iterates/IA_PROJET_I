@@ -278,9 +278,9 @@ class Projet1ViewWidget(QWidget):
         self.axis.set_xlabel('x')
         self.axis.set_ylabel('y')
         self.axis.set_zlabel('z')
-        self.axis.set_xlim3d(0, 1)
-        self.axis.set_ylim3d(0, 1)
-        self.axis.set_zlim3d(0, 1)    
+        self.axis.set_xlim3d(0, 1.5)
+        self.axis.set_ylim3d(0, 1.5)
+        self.axis.set_zlim3d(0, 1.5)    
     
     def mathgraph(self):
                 
