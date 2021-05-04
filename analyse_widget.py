@@ -17,6 +17,7 @@ from klustr_utils import qimage_argb32_from_png_decoding
 from klustr_dao import *
 
 from klustr_engine import *
+from klustr_knn import *
 
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -324,7 +325,7 @@ class Projet1ViewWidget(QWidget):
         self.cbox_singletest.clear()
         self.cbox_singletest.add_items(self.dataset_image[:,3])
         
-        # Analyse du data  
+        # Analyse du data
         # ---------------------------------
         
         # Aller chercher le dataset_test
@@ -348,6 +349,11 @@ class Projet1ViewWidget(QWidget):
         
         # Retourner les valeurs KNN de la liste d'image
         self.knn_values_x, self.knn_values_y, self.knn_values_z = KlustEngine(dataset_test[:,6]).extraire_coord()
+
+        # Faire le training du knn avec le dataset sélectionné
+        self.knn_points = np.array([self.knn_values_x, self.knn_values_y, self.knn_values_z])
+        # print(self.knn_points)
+        self.knn = Knn(self.knn_points, self.dataset_label, 1, 5, np.array([0.5, 0.9, 0.1]))
         
         print(np.count_nonzero(np.array(self.knn_values_x) > 1))
         print(np.count_nonzero(np.array(self.knn_values_y) > 1))
