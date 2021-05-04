@@ -268,7 +268,7 @@ class Projet1ViewWidget(QWidget):
         
     def mathgraph_init(self):
         my_dpi = 100
-        width, height = 570, 570
+        width, height = 550, 550
         figure = plt.figure(figsize=(width / my_dpi, height / my_dpi), dpi=my_dpi)
         figure.set_size_inches(width / my_dpi, height / my_dpi)  
         self.canvas = FigureCanvas(figure)         
@@ -278,9 +278,9 @@ class Projet1ViewWidget(QWidget):
         self.axis.set_xlabel('x')
         self.axis.set_ylabel('y')
         self.axis.set_zlabel('z')
-        self.axis.set_xlim3d(0, 1.5)
-        self.axis.set_ylim3d(0, 1.5)
-        self.axis.set_zlim3d(0, 1.5)    
+        self.axis.set_xlim3d(0, 1.25)
+        self.axis.set_ylim3d(0, 1)
+        self.axis.set_zlim3d(0, 1)    
     
     def mathgraph(self):
                 
@@ -328,10 +328,10 @@ class Projet1ViewWidget(QWidget):
         # ---------------------------------
         
         # Aller chercher le dataset_test
-        dataset_test = np.array(self.klustr_dao.image_from_dataset(cbox_dataset_title, False), dtype=object)
+        self.dataset_test = np.array(self.klustr_dao.image_from_dataset(cbox_dataset_title, True), dtype=object)
         
         # Return all Labels in dataset_test and assign a color and symbol        
-        self.dataset_label, frequency = np.unique(self.dataset_image[:,1], return_counts = True)
+        self.dataset_label, frequency = np.unique(self.dataset_test[:,1], return_counts = True)
         qte_label = np.count_nonzero(self.dataset_label)
         
         couleur = np.random.rand(qte_label, 3)
@@ -347,11 +347,11 @@ class Projet1ViewWidget(QWidget):
                 marqueur.append('o')
         
         # Retourner les valeurs KNN de la liste d'image
-        self.knn_values_x, self.knn_values_y, self.knn_values_z = KlustEngine(dataset_test[:,6]).extraire_coord()
+        self.knn_values_x, self.knn_values_y, self.knn_values_z = KlustEngine(self.dataset_test[:,6]).extraire_coord()
         
-        print(np.count_nonzero(np.array(self.knn_values_x) > 1))
-        print(np.count_nonzero(np.array(self.knn_values_y) > 1))
-        print(np.count_nonzero(np.array(self.knn_values_z) > 1))
+        #print(np.count_nonzero(np.array(self.knn_values_x) > 1))
+        #print(np.count_nonzero(np.array(self.knn_values_y) > 1))
+        #print(np.count_nonzero(np.array(self.knn_values_z) > 1))
         
         # Afficher les points ds le graphique
         self.mathgraph_init()
@@ -393,7 +393,7 @@ class Projet1ViewWidget(QWidget):
                         "{:<150}".format("\t- Normalisation des axes/metriques KNN") + "\n\n" + \
                         "{:<150}".format("Nos 3 descripteurs de formes sont :") + "\n" + \
                         "{:<150}".format("\t- Indice de complexite") + "\n" + \
-                        "{:<150}".format("\t\t- Aucune unite pour le domaine 0-1") + "\n" + \
+                        "{:<150}".format("\t\t- Aucune unite pour le domaine 0-1.2") + "\n" + \
                         "{:<150}".format("\t\t- Correspont a (4*pi*aire) divise par le perimetre au carre ") + "\n" + \
                         "{:<150}".format("\t- Indice de compacite") + "\n" + \
                         "{:<150}".format("\t\t- Aucune unite pour le domaine 0-1") + "\n" + \
