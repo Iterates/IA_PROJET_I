@@ -49,7 +49,7 @@ class KlustEngine():
         x = np.sum(coordx * array)
         y = np.sum(coordy * array)
         ele = np.count_nonzero(array == 1)
-        return y/ele, x/ele    
+        return y/ele, x/ele
 
     #dessine un cerle autour de l'image
     def draw_circle_around_form(self, image, centroid, radius):
@@ -85,6 +85,7 @@ class KlustEngine():
         return np.logical_or(temp_right, np.logical_or(temp_bottom, np.logical_or(temp_top, temp_left)))
 
     def knn_axe1(self, area, perimeter):
+        # return (4 * np.pi * area) / perimeter**2
         return (4 * np.pi * area) / perimeter**2
 
     def knn_axe2(self, area, area_circle):

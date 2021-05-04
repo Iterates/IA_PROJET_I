@@ -41,5 +41,5 @@ if __name__ == "__main__":
     g = ke.knn_axe2()
     h = ke.perimetre
 
-    print(kf.dataset_images_name)
+    # print(kf.dataset_images_name)
     z=1
