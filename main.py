@@ -1,7 +1,7 @@
 # -------------------------------------------------------------
 # Auteur  : Henri-Paul Bolduc
 #           Ariel Hotz-Garber
-#           Gael Lane Lépine
+#           Gael Lane Lepine
 # Cours   : 420-C52-IN - AI 1
 # TP 1    : Analyse KNN des images
 # Fichier : main.py

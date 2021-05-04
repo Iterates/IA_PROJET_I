@@ -1,19 +1,26 @@
 # -------------------------------------------------------------
 # Auteur  : Henri-Paul Bolduc
-#           Ari
-#           Gael
+#           Ariel Hotz-Garber
+#           Gael Lane Lepine
 # Cours   : 420-C52-IN - AI 1
 # TP 1    : Analyse KNN des images
-# Fichier : main.py
+# Fichier : analyse_widget.py
 # -------------------------------------------------------------
 
 # Importation des modules
 # -------------------------------------------------------------
 import sys
 import numpy as np
+import matplotlib.pyplot as plt
 
 from klustr_utils import qimage_argb32_from_png_decoding
 from klustr_dao import *
+
+from klustr_engine import *
+from klustr_knn import *
+
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt
@@ -32,10 +39,10 @@ class Projet1ViewWidget(QWidget):
 
     def __init__(self, klustr_dao, parent=None):
         
-        super().__init__(parent)
-        
+        super().__init__(parent)        
 
         self.klustr_dao = klustr_dao
+        
         if self.klustr_dao.is_available:
             self._setup_models()
             self._setup_gui()
@@ -51,6 +58,7 @@ class Projet1ViewWidget(QWidget):
         self.dataset = np.array(self.klustr_dao.available_datasets, dtype=object)[:,1]
         self.dataset = self.dataset + ' [' + np.array(self.klustr_dao.available_datasets, dtype=object)[:,5].astype(str) + ']'
         self.dataset = self.dataset + ' [' + np.array(self.klustr_dao.available_datasets, dtype=object)[:,8].astype(str) + ']' 
+        #print(self.dataset)
     
     # Code Jean-Christophe si la data base n'est pas accessible
     # ---------------------------------------------------------    
@@ -64,10 +72,12 @@ class Projet1ViewWidget(QWidget):
     
     # Setup interface graphique
     # -------------------------    
-    def _setup_gui(self):
+    def _setup_gui(self):       
         
         # QLabel
         # ------
+        self.qlab_matgraph = QLabel()   
+        
         qlab_catcount = QLabel("Category count:")
         qlab_trainimgcount = QLabel("Training image count:")
         qlab_testimgcount = QLabel("Test image count:")
@@ -104,8 +114,8 @@ class Projet1ViewWidget(QWidget):
         self.cbox_singletest.currentIndexChanged.connect(self._cbox_singletest_index_change)
         
         self.cbox_dataset = QComboBox()
-        self.cbox_dataset.currentIndexChanged.connect(self._cbox_dataset_index_change)      
-        self.cbox_dataset.add_items(self.dataset)        
+        self.cbox_dataset.currentIndexChanged.connect(self._cbox_dataset_index_change)  
+        self.cbox_dataset.add_items(self.dataset)    
         
         # Group Box
         # ---------
@@ -207,6 +217,8 @@ class Projet1ViewWidget(QWidget):
         vbox_allinfo.add_widget(gbox_knn)
         vbox_allinfo.add_widget(buttonAbout)
         
+        vbox_KNNClassification.add_widget(self.qlab_matgraph)
+        
         hbox_main.add_layout(vbox_allinfo)
         hbox_main.add_layout(vbox_KNNClassification)    
 
@@ -255,6 +267,31 @@ class Projet1ViewWidget(QWidget):
         self.qlab_k.set_fixed_size(100, 10)
         self.qlab_max.set_fixed_size(100, 10)
         
+    def mathgraph_init(self):
+        my_dpi = 100
+        width, height = 570, 570
+        figure = plt.figure(figsize=(width / my_dpi, height / my_dpi), dpi=my_dpi)
+        figure.set_size_inches(width / my_dpi, height / my_dpi)  
+        self.canvas = FigureCanvas(figure)         
+        
+        self.axis = figure.add_subplot(projection='3d')        
+        self.axis.set_title('KNN Classification')
+        self.axis.set_xlabel('x')
+        self.axis.set_ylabel('y')
+        self.axis.set_zlabel('z')
+        self.axis.set_xlim3d(0, 1.5)
+        self.axis.set_ylim3d(0, 1.5)
+        self.axis.set_zlim3d(0, 1.5)    
+    
+    def mathgraph(self):
+                
+        self.canvas.draw()
+        w, h = self.canvas.get_width_height()
+        buffer = self.canvas.buffer_rgba() 
+        image = QtGui.QImage(buffer, w, h, w * 4, QtGui.QImage.Format_ARGB32)
+        self.qlab_matgraph.pixmap = QtGui.QPixmap.from_image(image)
+    
+    
     @Slot()
     def _cbox_dataset_index_change(self):
         # Update data of dataset box
@@ -287,7 +324,52 @@ class Projet1ViewWidget(QWidget):
         self.dataset_image = np.array(self.klustr_dao.image_from_dataset(cbox_dataset_title, False), dtype=object)
         self.cbox_singletest.clear()
         self.cbox_singletest.add_items(self.dataset_image[:,3])
+        
+        # Analyse du data
+        # ---------------------------------
+        
+        # Aller chercher le dataset_test
+        dataset_test = np.array(self.klustr_dao.image_from_dataset(cbox_dataset_title, False), dtype=object)
+        
+        # Return all Labels in dataset_test and assign a color and symbol        
+        self.dataset_label, frequency = np.unique(self.dataset_image[:,1], return_counts = True)
+        qte_label = np.count_nonzero(self.dataset_label)
+        
+        couleur = np.random.rand(qte_label, 3)
+        
+        marqueur = []        
+        for i in self.dataset_label:            
+            random_temp = np.random.rand()
+            if random_temp < 0.33: 
+                marqueur.append('+')
+            elif random_temp < 0.66: 
+                marqueur.append('x')
+            else: 
+                marqueur.append('o')
+        
+        # Retourner les valeurs KNN de la liste d'image
+        self.knn_values_x, self.knn_values_y, self.knn_values_z = KlustEngine(dataset_test[:,6]).extraire_coord()
 
+        # Faire le training du knn avec le dataset sélectionné
+        self.knn_points = np.array([self.knn_values_x, self.knn_values_y, self.knn_values_z])
+        # print(self.knn_points)
+        self.knn = Knn(self.knn_points, self.dataset_label, 1, 5, np.array([0.5, 0.9, 0.1]))
+        
+        print(np.count_nonzero(np.array(self.knn_values_x) > 1))
+        print(np.count_nonzero(np.array(self.knn_values_y) > 1))
+        print(np.count_nonzero(np.array(self.knn_values_z) > 1))
+        
+        # Afficher les points ds le graphique
+        self.mathgraph_init()
+        
+        compteur_frequency = 0
+        compteur_i = 0
+        for i in frequency: 
+            self.axis.scatter(self.knn_values_x[compteur_frequency:compteur_frequency+i], self.knn_values_y[compteur_frequency:compteur_frequency+i], self.knn_values_z[compteur_frequency:compteur_frequency+i], color=couleur[compteur_i], marker=marqueur[compteur_i])
+            compteur_frequency += i
+            compteur_i += 1
+
+        self.mathgraph()
     
     @Slot()
     def _cbox_singletest_index_change(self):
@@ -304,9 +386,38 @@ class Projet1ViewWidget(QWidget):
     def _click_about(self):
         qmsgbox = QMessageBox()
         qmsgbox.set_window_title("Projet 1 - C52 - About")
-        qmsgbox.text =  "{:<100}".format("Blabla1") + "\n" + \
-                        "{:<100}".format("Blabla2") + "\n" + \
-                        "{:<100}".format("Blabla3")
+        qmsgbox.text =  "{:<150}".format("Ce logiciel est le projet #1 du cours C52.") + "\n\n" + \
+                        "{:<150}".format("Il a ete realise par :") + "\n" + \
+                        "{:<150}".format("\t- Henri-Paul Bolduc") + "\n" + \
+                        "{:<150}".format("\t- Ariel Hotz-Garber") + "\n" + \
+                        "{:<150}".format("\t- Gael Lane Lepine") + "\n\n" + \
+                        "{:<150}".format("Il consiste a faire une analyse d'image 2D avec les concept suivants :") + "\n" + \
+                        "{:<150}".format("\t- Application de Numpy") + "\n" + \
+                        "{:<150}".format("\t- Application de MatPlotLib") + "\n" + \
+                        "{:<150}".format("\t- Application de Pyside6 et des widgets") + "\n" + \
+                        "{:<150}".format("\t- Analyse selon les principes KNN") + "\n" + \
+                        "{:<150}".format("\t- Normalisation des axes/metriques KNN") + "\n\n" + \
+                        "{:<150}".format("Nos 3 descripteurs de formes sont :") + "\n" + \
+                        "{:<150}".format("\t- Indice de complexite") + "\n" + \
+                        "{:<150}".format("\t\t- Aucune unite pour le domaine 0-1") + "\n" + \
+                        "{:<150}".format("\t\t- Correspont a (4*pi*aire) divise par le perimetre au carre ") + "\n" + \
+                        "{:<150}".format("\t- Indice de compacite") + "\n" + \
+                        "{:<150}".format("\t\t- Aucune unite pour le domaine 0-1") + "\n" + \
+                        "{:<150}".format("\t\t- Correspont a l'aire de la forme divisee par l'aire du cercle") + "\n" + \
+                        "{:<150}".format("\t\t  qui l'encapsule ") + "\n" + \
+                        "{:<150}".format("\t- Moyenne centroid/perimetre") + "\n" + \
+                        "{:<150}".format("\t\t- Aucune unite pour le domaine 0-1") + "\n" + \
+                        "{:<150}".format("\t\t- Correspont a la moyenne de la somme des distances") + "\n" + \
+                        "{:<150}".format("\t\t  centroid/perimetre divise par le rayon qui l'encapsule") + "\n\n" + \
+                        "{:<150}".format("Plus precisement, ce laboratoire permet de mettre en pratique les notions de :") + "\n" + \
+                        "{:<150}".format("\t- Notion 1") + "\n" + \
+                        "{:<150}".format("\t- Notion 2") + "\n\n" + \
+                        "{:<150}".format("Un effort d'abstraction a ete fait pour ces points :") + "\n" + \
+                        "{:<150}".format("\t- P1") + \
+                        "{:<150}".format("\t- P2") + "\n" + \
+                        "{:<150}".format("Finalement, l'ensemble de donnees le plus complexe que nous avons etecapable de resoudre est :") + "\n" + \
+                        "{:<150}".format("\t- Ensemble nous y arriverons")   
+                        
         qmsgbox.exec()
         
     @Slot()
