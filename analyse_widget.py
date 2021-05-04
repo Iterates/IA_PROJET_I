@@ -1,6 +1,6 @@
 # -------------------------------------------------------------
 # Auteur  : Henri-Paul Bolduc
-#           Ari Hotz-Garber
+#           Ariel Hotz-Garber
 #           Gael Lane Lepine
 # Cours   : 420-C52-IN - AI 1
 # TP 1    : Analyse KNN des images
@@ -348,10 +348,10 @@ class Projet1ViewWidget(QWidget):
         
         # Retourner les valeurs KNN de la liste d'image
         self.knn_values_x, self.knn_values_y, self.knn_values_z = KlustEngine(dataset_test[:,6]).extraire_coord()
-        print (self.knn_values_x)
-        print (self.knn_values_y)
-        print (self.knn_values_z)
-        print (frequency)
+        
+        print(np.count_nonzero(np.array(self.knn_values_x) > 1))
+        print(np.count_nonzero(np.array(self.knn_values_y) > 1))
+        print(np.count_nonzero(np.array(self.knn_values_z) > 1))
         
         # Afficher les points ds le graphique
         self.mathgraph_init()
@@ -380,9 +380,38 @@ class Projet1ViewWidget(QWidget):
     def _click_about(self):
         qmsgbox = QMessageBox()
         qmsgbox.set_window_title("Projet 1 - C52 - About")
-        qmsgbox.text =  "{:<100}".format("Blabla1") + "\n" + \
-                        "{:<100}".format("Blabla2") + "\n" + \
-                        "{:<100}".format("Blabla3")
+        qmsgbox.text =  "{:<150}".format("Ce logiciel est le projet #1 du cours C52.") + "\n\n" + \
+                        "{:<150}".format("Il a ete realise par :") + "\n" + \
+                        "{:<150}".format("\t- Henri-Paul Bolduc") + "\n" + \
+                        "{:<150}".format("\t- Ariel Hotz-Garber") + "\n" + \
+                        "{:<150}".format("\t- Gael Lane Lepine") + "\n\n" + \
+                        "{:<150}".format("Il consiste a faire une analyse d'image 2D avec les concept suivants :") + "\n" + \
+                        "{:<150}".format("\t- Application de Numpy") + "\n" + \
+                        "{:<150}".format("\t- Application de MatPlotLib") + "\n" + \
+                        "{:<150}".format("\t- Application de Pyside6 et des widgets") + "\n" + \
+                        "{:<150}".format("\t- Analyse selon les principes KNN") + "\n" + \
+                        "{:<150}".format("\t- Normalisation des axes/metriques KNN") + "\n\n" + \
+                        "{:<150}".format("Nos 3 descripteurs de formes sont :") + "\n" + \
+                        "{:<150}".format("\t- Indice de complexite") + "\n" + \
+                        "{:<150}".format("\t\t- Aucune unite pour le domaine 0-1") + "\n" + \
+                        "{:<150}".format("\t\t- Correspont a (4*pi*aire) divise par le perimetre au carre ") + "\n" + \
+                        "{:<150}".format("\t- Indice de compacite") + "\n" + \
+                        "{:<150}".format("\t\t- Aucune unite pour le domaine 0-1") + "\n" + \
+                        "{:<150}".format("\t\t- Correspont a l'aire de la forme divisee par l'aire du cercle") + "\n" + \
+                        "{:<150}".format("\t\t  qui l'encapsule ") + "\n" + \
+                        "{:<150}".format("\t- Moyenne centroid/perimetre") + "\n" + \
+                        "{:<150}".format("\t\t- Aucune unite pour le domaine 0-1") + "\n" + \
+                        "{:<150}".format("\t\t- Correspont a la moyenne de la somme des distances") + "\n" + \
+                        "{:<150}".format("\t\t  centroid/perimetre divise par le rayon qui l'encapsule") + "\n\n" + \
+                        "{:<150}".format("Plus precisement, ce laboratoire permet de mettre en pratique les notions de :") + "\n" + \
+                        "{:<150}".format("\t- Notion 1") + "\n" + \
+                        "{:<150}".format("\t- Notion 2") + "\n\n" + \
+                        "{:<150}".format("Un effort d'abstraction a ete fait pour ces points :") + "\n" + \
+                        "{:<150}".format("\t- P1") + \
+                        "{:<150}".format("\t- P2") + "\n" + \
+                        "{:<150}".format("Finalement, l'ensemble de donnees le plus complexe que nous avons etecapable de resoudre est :") + "\n" + \
+                        "{:<150}".format("\t- Ensemble nous y arriverons")   
+                        
         qmsgbox.exec()
         
     @Slot()

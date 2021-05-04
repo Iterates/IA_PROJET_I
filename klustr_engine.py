@@ -1,6 +1,6 @@
 # -------------------------------------------------------------
 # Auteur  : Henri-Paul Bolduc
-#           Ari Hotz-Garber
+#           Ariel Hotz-Garber
 #           Gael Lane Lepine
 # Cours   : 420-C52-IN - AI 1
 # TP 1    : Analyse KNN des images
@@ -30,7 +30,7 @@ class KlustEngine():
             centroid = self.centroid_function(i)
             radius = self.centroid_radius(i, centroid)
             aire = self.area_function(i)
-            perimetre = np.count_nonzero(self.perimeter_image(i) * 1)
+            perimetre = self.calcul_perimetre(i)
             cercle = self.draw_circle_around_form(i, centroid, radius)
             aire_cerlce = self.area_function(cercle)
             
@@ -71,6 +71,16 @@ class KlustEngine():
         a = dist[image_perimetre == 1]
         return (np.min(a), np.mean(a), np.max(a))
 
+    def calcul_perimetre(self, image):
+        perimetre = self.perimeter_image(image)
+        m_top = perimetre[0:-2, 1:-1]
+        m_right = perimetre[1:-1, 2:]
+        m_left = perimetre[1:-1, 0:-2]
+        m_bottom = perimetre[2:, 1:-1]
+        m_total = m_top + m_right + m_left + m_bottom
+        m_total = np.pad(m_total, pad_width=1, mode="constant", constant_values=0)
+        return np.sum(perimetre * np.where(m_total, 1, np.sqrt(2)))
+
     # calcul du p�rim�tre
     def perimeter_image(self, image):
         m_left = image[1:-1, 0:-2]
@@ -94,3 +104,4 @@ class KlustEngine():
     def knn_axe3(self, image, centroid):
         distance = self.dist_moy_centre(self.perimeter_image(image) * 1, centroid)
         return distance[1] / distance[2]
+# -------------------------------------------------------------

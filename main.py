@@ -1,6 +1,6 @@
 # -------------------------------------------------------------
 # Auteur  : Henri-Paul Bolduc
-#           Ari Hotz-Garber
+#           Ariel Hotz-Garber
 #           Gael Lane Lepine
 # Cours   : 420-C52-IN - AI 1
 # TP 1    : Analyse KNN des images
