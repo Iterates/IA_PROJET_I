@@ -258,7 +258,9 @@ class Projet1ViewWidget(QWidget):
         
         self.qlab_k.set_fixed_size(100, 10)
         self.qlab_max.set_fixed_size(100, 10)
-        
+    
+    # Init le Graph
+    # ---------------
     def mathgraph_init(self):
         my_dpi = 100
         width, height = 550, 550
@@ -275,6 +277,8 @@ class Projet1ViewWidget(QWidget):
         self.axis.set_ylim3d(0, 1)
         self.axis.set_zlim3d(0, 1)    
     
+    # Afficher le graph
+    # ---------------
     def mathgraph(self):                
         self.canvas.draw()
         w, h = self.canvas.get_width_height()
@@ -345,10 +349,6 @@ class Projet1ViewWidget(QWidget):
         # Retourner les valeurs KNN de la liste d'image
         self.knn_values_x, self.knn_values_y, self.knn_values_z = KlustEngine(self.dataset_test[:,6]).extraire_coord()
         
-        #print(np.count_nonzero(np.array(self.knn_values_x) > 1))
-        #print(np.count_nonzero(np.array(self.knn_values_y) > 1))
-        #print(np.count_nonzero(np.array(self.knn_values_z) > 1))
-        
         # Afficher les points ds le graphique
         self.mathgraph_init()
         
@@ -373,7 +373,7 @@ class Projet1ViewWidget(QWidget):
         self.knn_points = np.array([self.knn_values_x, self.knn_values_y, self.knn_values_z])
         self.img_value_x, self.img_value_y, self.img_value_z = KlustEngine([self.dataset_image[self.cbox_singletest_index,6]]).extraire_coord()
         self.img_points = np.array([self.img_value_x, self.img_value_y, self.img_value_z])
-        self.knn = Knn(self.knn_points, self.dataset_image[:,1], self.img_points)
+        self.knn = Knn(self.knn_points, self.dataset_test[:,1], self.img_points)
         self.qlab_classify.text = self.knn.knn_classifiy(self.k_value, self.max_value)
         
     @Slot()

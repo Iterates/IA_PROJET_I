@@ -81,7 +81,6 @@ class KlustEngine():
         m_total = np.pad(m_total, pad_width=1, mode="constant", constant_values=0)
         return np.sum(perimetre * np.where(m_total, 1, np.sqrt(2)))
 
-    # calcul du périmètre
     def perimeter_image(self, image):
         m_left = image[1:-1, 0:-2]
         m_center = image[1:-1, 1:-1]
