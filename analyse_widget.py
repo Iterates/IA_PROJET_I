@@ -36,12 +36,10 @@ from __feature__ import snake_case, true_property
 # -------------------------------------------------------------
 class Projet1ViewWidget(QWidget):
 
-    def __init__(self, klustr_dao, parent=None):
-        
-        super().__init__(parent)        
+    def __init__(self, klustr_dao, parent=None):        
+        super().__init__(parent)
 
-        self.klustr_dao = klustr_dao
-        
+        self.klustr_dao = klustr_dao        
         if self.klustr_dao.is_available:
             self._setup_models()
             self._setup_gui()
@@ -52,12 +50,10 @@ class Projet1ViewWidget(QWidget):
         # Data for Dataset Box
         # --------------------
         self.alldata = np.array(self.klustr_dao.available_datasets, dtype=object)
-        #print(self.alldata)
         
         self.dataset = np.array(self.klustr_dao.available_datasets, dtype=object)[:,1]
         self.dataset = self.dataset + ' [' + np.array(self.klustr_dao.available_datasets, dtype=object)[:,5].astype(str) + ']'
         self.dataset = self.dataset + ' [' + np.array(self.klustr_dao.available_datasets, dtype=object)[:,8].astype(str) + ']' 
-        #print(self.dataset)
     
     # Code Jean-Christophe si la data base n'est pas accessible
     # ---------------------------------------------------------    
@@ -71,8 +67,7 @@ class Projet1ViewWidget(QWidget):
     
     # Setup interface graphique
     # -------------------------    
-    def _setup_gui(self):       
-        
+    def _setup_gui(self):        
         # QLabel
         # ------
         self.qlab_matgraph = QLabel()   
@@ -99,6 +94,22 @@ class Projet1ViewWidget(QWidget):
         self.qlab_k = QLabel()
         self.qlab_max = QLabel()
         
+        # Slider
+        # ------
+        self.qslid_k = QSlider(Qt.Horizontal)
+        self.qslid_max = QSlider(Qt.Horizontal)
+        
+        self.qslid_k.valueChanged.connect(self._qslid_k_change)
+        self.qslid_max.valueChanged.connect(self._qslid_max_change)
+        
+        self.qslid_k.minimum = 1
+        self.qslid_k.tick_interval = 1
+        
+        self.qslid_max.minimum = 1
+        self.qslid_max.maximum = 10
+        self.qslid_max.tick_interval = 1        
+        self.qslid_max.value = 3 
+        
         # Bouton
         # ------
         buttonAbout = QPushButton('About')
@@ -122,26 +133,7 @@ class Projet1ViewWidget(QWidget):
         gbox_singletest = QGroupBox('Single Test')
         gbox_transformation = QGroupBox('Transformation')
         gbox_includeddataset = QGroupBox('Included in dataset')
-        gbox_dataset = QGroupBox('Dataset')   
-        
-        # Slider
-        # ------
-        self.qslid_k = QSlider(Qt.Horizontal)
-        self.qslid_max = QSlider(Qt.Horizontal)
-        
-        self.qslid_k.valueChanged.connect(self._qslid_k_change)
-        self.qslid_max.valueChanged.connect(self._qslid_max_change)
-        
-        self.qslid_k.minimum = 10
-        self.qslid_k.maximum = 50
-        self.qslid_k.tick_interval = 5
-        
-        self.qslid_max.minimum = 1
-        self.qslid_max.maximum = 10
-        self.qslid_max.tick_interval = 1
-        
-        self.qslid_k.value = 30
-        self.qslid_max.value = 3        
+        gbox_dataset = QGroupBox('Dataset')       
                 
         # HBox et VBox
         # ------------
@@ -282,14 +274,12 @@ class Projet1ViewWidget(QWidget):
         self.axis.set_ylim3d(0, 1)
         self.axis.set_zlim3d(0, 1)    
     
-    def mathgraph(self):
-                
+    def mathgraph(self):                
         self.canvas.draw()
         w, h = self.canvas.get_width_height()
         buffer = self.canvas.buffer_rgba() 
         image = QtGui.QImage(buffer, w, h, w * 4, QtGui.QImage.Format_ARGB32)
-        self.qlab_matgraph.pixmap = QtGui.QPixmap.from_image(image)
-    
+        self.qlab_matgraph.pixmap = QtGui.QPixmap.from_image(image)    
     
     @Slot()
     def _cbox_dataset_index_change(self):
@@ -325,8 +315,7 @@ class Projet1ViewWidget(QWidget):
         self.cbox_singletest.add_items(self.dataset_image[:,3])
         
         # Analyse du data  
-        # ---------------------------------
-        
+        # ---------------------------------        
         # Aller chercher le dataset_test
         self.dataset_test = np.array(self.klustr_dao.image_from_dataset(cbox_dataset_title, True), dtype=object)
         
@@ -334,8 +323,14 @@ class Projet1ViewWidget(QWidget):
         self.dataset_label, frequency = np.unique(self.dataset_test[:,1], return_counts = True)
         qte_label = np.count_nonzero(self.dataset_label)
         
+        # Set K Value Max
+        self.qslid_k.value = 1
+        self.qslid_k.maximum = np.sum(frequency)
+        
+        # Set couleur
         couleur = np.random.rand(qte_label, 3)
         
+        # Set marqueur
         marqueur = []        
         for i in self.dataset_label:            
             random_temp = np.random.rand()
@@ -416,7 +411,7 @@ class Projet1ViewWidget(QWidget):
         
     @Slot()
     def _qslid_k_change(self):
-        self.k_value = self.qslid_k.value/10
+        self.k_value = self.qslid_k.value
         self.qlab_k.text = "K = " + str(self.k_value)
         
     @Slot()
