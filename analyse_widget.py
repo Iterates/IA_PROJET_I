@@ -319,7 +319,7 @@ class Projet1ViewWidget(QWidget):
         # ---------------------------------
         
         # Aller chercher le dataset_test
-        dataset_test = np.array(self.klustr_dao.image_from_dataset(cbox_dataset_title, True), dtype=object)
+        self.dataset_test = np.array(self.klustr_dao.image_from_dataset(cbox_dataset_title, True), dtype=object)
         
         # Return all Labels in dataset_test and assign a color and symbol        
         self.dataset_label, frequency = np.unique(self.dataset_test[:,1], return_counts = True)
@@ -344,7 +344,7 @@ class Projet1ViewWidget(QWidget):
                 marqueur.append('o')
         
         # Retourner les valeurs KNN de la liste d'image
-        self.knn_values_x, self.knn_values_y, self.knn_values_z = KlustEngine(dataset_test[:,6]).extraire_coord()
+        self.knn_values_x, self.knn_values_y, self.knn_values_z = KlustEngine(self.dataset_test[:,6]).extraire_coord()
 
         # Faire le training du knn avec le dataset sélectionné
         self.knn_points = np.array([self.knn_values_x, self.knn_values_y, self.knn_values_z])
