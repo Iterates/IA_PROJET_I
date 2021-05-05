@@ -17,6 +17,7 @@ from klustr_utils import qimage_argb32_from_png_decoding
 from klustr_dao import *
 
 from klustr_engine import *
+from klustr_knn import *
 
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -362,14 +363,18 @@ class Projet1ViewWidget(QWidget):
     
     @Slot()
     def _cbox_singletest_index_change(self):
-        cbox_singletest_index = self.cbox_singletest.current_index
-        self.singletest_image = qimage_argb32_from_png_decoding(self.dataset_image[cbox_singletest_index,6])
+        self.cbox_singletest_index = self.cbox_singletest.current_index
+        self.singletest_image = qimage_argb32_from_png_decoding(self.dataset_image[self.cbox_singletest_index,6])
         self.qlab_image.pixmap = QPixmap.from_image(self.singletest_image)
         self.qlab_classify.text = "Not classified"
         
     @Slot()
     def _click_classify(self):
-        self.qlab_classify.text = "Classified"
+        self.knn_points = np.array([self.knn_values_x, self.knn_values_y, self.knn_values_z])
+        self.img_value_x, self.img_value_y, self.img_value_z = KlustEngine([self.dataset_image[self.cbox_singletest_index,6]]).extraire_coord()
+        self.img_points = np.array([self.img_value_x, self.img_value_y, self.img_value_z])
+        self.knn = Knn(self.knn_points, self.dataset_image[:,1], self.img_points)
+        self.qlab_classify.text = self.knn.knn_classifiy(self.k_value, self.max_value)
         
     @Slot()
     def _click_about(self):
