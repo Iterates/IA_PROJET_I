@@ -2,32 +2,36 @@ from klustr_engine import *
 import numpy as np
 
 class Knn():
-    def __init__(self, array, labels, k, distance, classify_pt):
-        if k < 1:
-            self.k = 1
-        elif k > array.shape[0]:
-            self.k = array.shape[0]
-        else:
-            self.k = k
-        
+    def __init__(self, array, labels, classify_pt):
         self.distances = self.calcul_distance(array, classify_pt)
-        self.dict_etiquettes = dict(enumerate(labels, 0))
-        self.distances_classees = np.argsort(self.distances)
-        self.etiquettes_classees = np.take(np.array(self.dict_etiquettes), self.distances_classees)
+        self.labels = labels
         print(1)
 
     # calculer la distance entre tous les points et celui choisi
     def calcul_distance(self, array, classify_pt):
-        # dist = np.array([])
-        col_mesh, row_mesh = np.meshgrid(np.arange(array.shape[1]), np.arange(array.shape[0]))
-        # for pt in array[0]:
-        #     print(pt)
-        #     np.append(dist, (np.sqrt(pt[0] - classify_pt[0]))**2 + (np.sqrt(pt[1] - classify_pt[1]))**2 + (np.sqrt(pt[1] - classify_pt[1]))**2)
-        dist = np.sqrt(array[0] - classify_pt[0])**2 + (np.sqrt(array[1] - classify_pt[1]))**2 + (np.sqrt(array[1] - classify_pt[1]))**2
-        return dist
-
+        # a = np.array([[6, 5, 2, 99, 100], [7, 5, 2, 88, 100], [8, 5, 2, 77, 100]])
+        # pt2 = np.array([[0],[0],[0]])
+        classify_pt = np.reshape(classify_pt, (array.shape[0],1))
+        return np.sqrt((np.sum((array - classify_pt)**2, axis=0)))
 
         
-    def knn_classifiy(self):
-        pass
+    def knn_classifiy(self, k, distance):
+        if k < 1:
+            self.k = 1
+        elif k > self.distances.shape[0]:
+            self.k = self.distances.shape[0]
+        else:
+            self.k = k
+
+        # self.dict_etiquettes = dict(enumerate(labels, 0))
+        self.distances_classees = np.argsort(self.distances)
+        self.etiquettes_classees = np.take(self.labels, self.distances_classees)
+        self.k_voisins = self.etiquettes_classees[:self.k]
+        self.label_gagnant, self.frequency = np.unique(self.k_voisins, return_inverse = True)
+        counts = np.bincount(self.frequency)
+        maxpos = counts.argmax()
+        
+
+        print(self.label_gagnant[maxpos])
+        return self.label_gagnant[maxpos]
 

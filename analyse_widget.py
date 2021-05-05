@@ -329,7 +329,7 @@ class Projet1ViewWidget(QWidget):
         # ---------------------------------
         
         # Aller chercher le dataset_test
-        dataset_test = np.array(self.klustr_dao.image_from_dataset(cbox_dataset_title, False), dtype=object)
+        dataset_test = np.array(self.klustr_dao.image_from_dataset(cbox_dataset_title, True), dtype=object)
         
         # Return all Labels in dataset_test and assign a color and symbol        
         self.dataset_label, frequency = np.unique(self.dataset_image[:,1], return_counts = True)
@@ -353,7 +353,9 @@ class Projet1ViewWidget(QWidget):
         # Faire le training du knn avec le dataset sélectionné
         self.knn_points = np.array([self.knn_values_x, self.knn_values_y, self.knn_values_z])
         # print(self.knn_points)
-        self.knn = Knn(self.knn_points, self.dataset_label, 1, 5, np.array([0.5, 0.9, 0.1]))
+        # self.image_choisie = KlustEngine(self.dataset_image[self.cbox_singletest_index,6])
+        # self.knn = Knn(self.knn_points, self.dataset_image[:,1], np.array([0.5, 0.9, 0.1]))
+        # self.knn.knn_classifiy(3, 0.1)
         
         print(np.count_nonzero(np.array(self.knn_values_x) > 1))
         print(np.count_nonzero(np.array(self.knn_values_y) > 1))
@@ -373,13 +375,17 @@ class Projet1ViewWidget(QWidget):
     
     @Slot()
     def _cbox_singletest_index_change(self):
-        cbox_singletest_index = self.cbox_singletest.current_index
-        self.singletest_image = qimage_argb32_from_png_decoding(self.dataset_image[cbox_singletest_index,6])
+        self.cbox_singletest_index = self.cbox_singletest.current_index
+        self.singletest_image = qimage_argb32_from_png_decoding(self.dataset_image[self.cbox_singletest_index,6])
         self.qlab_image.pixmap = QPixmap.from_image(self.singletest_image)
         self.qlab_classify.text = "Not classified"
         
     @Slot()
     def _click_classify(self):
+        self.img_value_x, self.img_value_y, self.img_value_z = KlustEngine([self.dataset_image[self.cbox_singletest_index,6]]).extraire_coord()
+        self.img_points = np.array([self.img_value_x, self.img_value_y, self.img_value_z])
+        self.knn = Knn(self.knn_points, self.dataset_image[:,1], self.img_points)
+        self.knn.knn_classifiy(self.k_value, 0.1)
         self.qlab_classify.text = "Classified"
         
     @Slot()
@@ -422,7 +428,7 @@ class Projet1ViewWidget(QWidget):
         
     @Slot()
     def _qslid_k_change(self):
-        self.k_value = self.qslid_k.value/10
+        self.k_value = self.qslid_k.value
         self.qlab_k.text = "K = " + str(self.k_value)
         
     @Slot()
