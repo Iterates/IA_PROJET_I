@@ -37,12 +37,10 @@ from __feature__ import snake_case, true_property
 # -------------------------------------------------------------
 class Projet1ViewWidget(QWidget):
 
-    def __init__(self, klustr_dao, parent=None):
-        
-        super().__init__(parent)        
+    def __init__(self, klustr_dao, parent=None):        
+        super().__init__(parent)
 
-        self.klustr_dao = klustr_dao
-        
+        self.klustr_dao = klustr_dao        
         if self.klustr_dao.is_available:
             self._setup_models()
             self._setup_gui()
@@ -53,12 +51,10 @@ class Projet1ViewWidget(QWidget):
         # Data for Dataset Box
         # --------------------
         self.alldata = np.array(self.klustr_dao.available_datasets, dtype=object)
-        #print(self.alldata)
         
         self.dataset = np.array(self.klustr_dao.available_datasets, dtype=object)[:,1]
         self.dataset = self.dataset + ' [' + np.array(self.klustr_dao.available_datasets, dtype=object)[:,5].astype(str) + ']'
         self.dataset = self.dataset + ' [' + np.array(self.klustr_dao.available_datasets, dtype=object)[:,8].astype(str) + ']' 
-        #print(self.dataset)
     
     # Code Jean-Christophe si la data base n'est pas accessible
     # ---------------------------------------------------------    
@@ -72,8 +68,7 @@ class Projet1ViewWidget(QWidget):
     
     # Setup interface graphique
     # -------------------------    
-    def _setup_gui(self):       
-        
+    def _setup_gui(self):        
         # QLabel
         # ------
         self.qlab_matgraph = QLabel()   
@@ -100,6 +95,22 @@ class Projet1ViewWidget(QWidget):
         self.qlab_k = QLabel()
         self.qlab_max = QLabel()
         
+        # Slider
+        # ------
+        self.qslid_k = QSlider(Qt.Horizontal)
+        self.qslid_max = QSlider(Qt.Horizontal)
+        
+        self.qslid_k.valueChanged.connect(self._qslid_k_change)
+        self.qslid_max.valueChanged.connect(self._qslid_max_change)
+        
+        self.qslid_k.minimum = 1
+        self.qslid_k.tick_interval = 1
+        
+        self.qslid_max.minimum = 1
+        self.qslid_max.maximum = 10
+        self.qslid_max.tick_interval = 1        
+        self.qslid_max.value = 3 
+        
         # Bouton
         # ------
         buttonAbout = QPushButton('About')
@@ -123,26 +134,7 @@ class Projet1ViewWidget(QWidget):
         gbox_singletest = QGroupBox('Single Test')
         gbox_transformation = QGroupBox('Transformation')
         gbox_includeddataset = QGroupBox('Included in dataset')
-        gbox_dataset = QGroupBox('Dataset')   
-        
-        # Slider
-        # ------
-        self.qslid_k = QSlider(Qt.Horizontal)
-        self.qslid_max = QSlider(Qt.Horizontal)
-        
-        self.qslid_k.valueChanged.connect(self._qslid_k_change)
-        self.qslid_max.valueChanged.connect(self._qslid_max_change)
-        
-        self.qslid_k.minimum = 10
-        self.qslid_k.maximum = 50
-        self.qslid_k.tick_interval = 5
-        
-        self.qslid_max.minimum = 1
-        self.qslid_max.maximum = 10
-        self.qslid_max.tick_interval = 1
-        
-        self.qslid_k.value = 30
-        self.qslid_max.value = 3        
+        gbox_dataset = QGroupBox('Dataset')       
                 
         # HBox et VBox
         # ------------
@@ -269,7 +261,7 @@ class Projet1ViewWidget(QWidget):
         
     def mathgraph_init(self):
         my_dpi = 100
-        width, height = 570, 570
+        width, height = 550, 550
         figure = plt.figure(figsize=(width / my_dpi, height / my_dpi), dpi=my_dpi)
         figure.set_size_inches(width / my_dpi, height / my_dpi)  
         self.canvas = FigureCanvas(figure)         
@@ -279,18 +271,16 @@ class Projet1ViewWidget(QWidget):
         self.axis.set_xlabel('x')
         self.axis.set_ylabel('y')
         self.axis.set_zlabel('z')
-        self.axis.set_xlim3d(0, 1.5)
-        self.axis.set_ylim3d(0, 1.5)
-        self.axis.set_zlim3d(0, 1.5)    
+        self.axis.set_xlim3d(0, 1.25)
+        self.axis.set_ylim3d(0, 1)
+        self.axis.set_zlim3d(0, 1)    
     
-    def mathgraph(self):
-                
+    def mathgraph(self):                
         self.canvas.draw()
         w, h = self.canvas.get_width_height()
         buffer = self.canvas.buffer_rgba() 
         image = QtGui.QImage(buffer, w, h, w * 4, QtGui.QImage.Format_ARGB32)
-        self.qlab_matgraph.pixmap = QtGui.QPixmap.from_image(image)
-    
+        self.qlab_matgraph.pixmap = QtGui.QPixmap.from_image(image)    
     
     @Slot()
     def _cbox_dataset_index_change(self):
@@ -332,11 +322,17 @@ class Projet1ViewWidget(QWidget):
         dataset_test = np.array(self.klustr_dao.image_from_dataset(cbox_dataset_title, True), dtype=object)
         
         # Return all Labels in dataset_test and assign a color and symbol        
-        self.dataset_label, frequency = np.unique(self.dataset_image[:,1], return_counts = True)
+        self.dataset_label, frequency = np.unique(self.dataset_test[:,1], return_counts = True)
         qte_label = np.count_nonzero(self.dataset_label)
         
+        # Set K Value Max
+        self.qslid_k.value = 1
+        self.qslid_k.maximum = np.sum(frequency)
+        
+        # Set couleur
         couleur = np.random.rand(qte_label, 3)
         
+        # Set marqueur
         marqueur = []        
         for i in self.dataset_label:            
             random_temp = np.random.rand()
@@ -357,9 +353,9 @@ class Projet1ViewWidget(QWidget):
         # self.knn = Knn(self.knn_points, self.dataset_image[:,1], np.array([0.5, 0.9, 0.1]))
         # self.knn.knn_classifiy(3, 0.1)
         
-        print(np.count_nonzero(np.array(self.knn_values_x) > 1))
-        print(np.count_nonzero(np.array(self.knn_values_y) > 1))
-        print(np.count_nonzero(np.array(self.knn_values_z) > 1))
+        #print(np.count_nonzero(np.array(self.knn_values_x) > 1))
+        #print(np.count_nonzero(np.array(self.knn_values_y) > 1))
+        #print(np.count_nonzero(np.array(self.knn_values_z) > 1))
         
         # Afficher les points ds le graphique
         self.mathgraph_init()
@@ -405,7 +401,7 @@ class Projet1ViewWidget(QWidget):
                         "{:<150}".format("\t- Normalisation des axes/metriques KNN") + "\n\n" + \
                         "{:<150}".format("Nos 3 descripteurs de formes sont :") + "\n" + \
                         "{:<150}".format("\t- Indice de complexite") + "\n" + \
-                        "{:<150}".format("\t\t- Aucune unite pour le domaine 0-1") + "\n" + \
+                        "{:<150}".format("\t\t- Aucune unite pour le domaine 0-1.2") + "\n" + \
                         "{:<150}".format("\t\t- Correspont a (4*pi*aire) divise par le perimetre au carre ") + "\n" + \
                         "{:<150}".format("\t- Indice de compacite") + "\n" + \
                         "{:<150}".format("\t\t- Aucune unite pour le domaine 0-1") + "\n" + \
